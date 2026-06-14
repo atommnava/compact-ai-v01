@@ -1,0 +1,169 @@
+// lib/paic/examplePAIC.ts
+
+import type { PAICDocument } from "@/types/paic";
+
+export const examplePAIC: PAICDocument = {
+  version: "0.1",
+
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+
+  identity: {
+    name: "Atom",
+    occupation: "Student / Software Developer",
+    education: "IT & Programming",
+
+    languages: [
+      "Spanish",
+      "English"
+    ],
+
+    location: "Mexico",
+
+    summary:
+      "Interested in AI, software development, drones, startups, and technology."
+  },
+
+  preferences: {
+    responseStyle: "detailed",
+    tone: "technical",
+    preferredLanguage: "Spanish",
+    explanationDepth: "advanced",
+
+    formatting: {
+      prefersBullets: true,
+      prefersExamples: true,
+      prefersStepByStep: true
+    }
+  },
+
+  skills: [
+    {
+      id: "skill-1",
+      name: "TypeScript",
+      level: "intermediate",
+      category: "Programming",
+
+      evidence: [
+        "PAIC Project"
+      ]
+    },
+
+    {
+      id: "skill-2",
+      name: "React",
+      level: "intermediate",
+      category: "Frontend",
+
+      evidence: [
+        "Next.js Applications"
+      ]
+    }
+  ],
+
+  projects: [
+    {
+      id: "project-1",
+
+      name: "PAIC",
+
+      description:
+        "Portable AI Identity & Context standard for cross-platform AI memory.",
+
+      status: "planning",
+
+      technologies: [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "PostgreSQL",
+        "Supabase"
+      ],
+
+      goals: [
+        "Create a universal AI identity format",
+        "Enable AI portability"
+      ],
+
+      notes: [
+        "Current phase: architecture and specification"
+      ],
+
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ],
+
+  goals: [
+    {
+      id: "goal-1",
+
+      title: "Build PAIC MVP",
+
+      description:
+        "Create the first functional version of the PAIC standard.",
+
+      timeframe: "long_term",
+
+      status: "in_process",
+
+      relatedProjects: [
+        "project-1"
+      ]
+    }
+  ],
+
+  memories: [
+    {
+      id: "memory-1",
+      content:
+        "The user wants to create a universal portable identity layer for AI systems.",
+      category: "project",
+
+      importance: "critical",
+
+      tags: [
+        "PAIC",
+        "AI",
+        "Startup"
+      ],
+
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+
+    {
+      id: "memory-2",
+
+      content:
+        "The user prefers detailed technical explanations with examples.",
+
+      category: "preference",
+
+      importance: "high",
+
+      tags: [
+        "communication",
+        "learning"
+      ],
+
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ],
+
+  metadata: {
+    ownerId: "example-user",
+
+    sourceProviders: [
+      "chatgpt"
+    ],
+
+    exportedFrom: "PAIC Example Generator",
+
+    notes:
+      "Example document used for development and testing."
+  }
+};
+
+console.log(examplePAIC);
