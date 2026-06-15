@@ -1,5 +1,5 @@
 // lib/paic/examplePAIC.ts
-
+//
 import type { PAICDocument } from "@/types/paic";
 
 export const examplePAIC: PAICDocument = {
