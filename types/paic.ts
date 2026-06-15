@@ -1,3 +1,4 @@
+// types/paic.ts
 export type PAICVersion = "0.1";
 export type MemoryImportance = "low" | "medium" | "high" | "critical";
 export type ProjectStatus =
