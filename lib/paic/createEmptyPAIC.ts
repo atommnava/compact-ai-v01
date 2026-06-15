@@ -1,7 +1,7 @@
 // createEmptyPAIC.ts
 /*
   Este archivo sirve para que el sistema pueda crear
-  el estado inicial de cualquier perfil PAIC
+  el estado inicial de cualquier perfil PAIC.
  */
 
 import type { PAICDocument } from "@/types/paic";
