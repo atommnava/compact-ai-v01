@@ -7,7 +7,7 @@ export interface PAICComparisonResult {
 }
 
 export function comparePAIC (
-    original : PAICDocuement,
+    original : PAICDocument,
     imported : PAICDocument
 ) : PAICComparisonResult {
     const originalJSON = JSON.stringify(original);
