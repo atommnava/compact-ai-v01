@@ -29,7 +29,7 @@ export function buildPAIC(input : BuildPAICInput) : PAICDocument {
     if (input.interests && input.interests.length > 0) {
         paic.memories = input.interests.map((interest, index) => ({
             id : `memory-interest-${index + 1}`,
-            content : `User is interested in ${interest}`,
+            content : `User is interested in ${interest}.`,
             category : "personal",
             importance : "medium",
             tags : ["interest", interest],
