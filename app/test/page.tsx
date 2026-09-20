@@ -1,34 +1,51 @@
-import { exportPAIC } from "@/lib/paic/exportPAIC";
-import { validatePAIC } from "@/lib/paic/validatePaic";
 import { buildPAIC } from "@/lib/paic/buildPAIC";
-import { examplePAIC } from "@/lib/paic/examplePAIC"
-import { importPAIC } from "@/lib/paic/importPAIC";
-import { comparePAIC } from "@/lib/paic/comparePAIC";
+import { extractMemories } from "@/lib/paic/extractMemories";
+import { addExtractedMemories } from "@/lib/paic/addExtractedMemories";
+import { validatePAIC } from "@/lib/paic/validatePAIC";
 
 export default function TestPage() {
-    const builtPAIC = buildPAIC({
+    const paic = buildPAIC({
         name: "Atom",
         occupation: "Student / Software Developer",
         education: "IT & Programming",
         languages: ["Spanish", "English"],
         location: "Mexico",
-        summary: "Interested in AI, software development, startups, and drones.",
+        summary:
+        "Interested in AI, software development, startups, and drones.",
         interests: ["AI", "Startups", "Drones"],
     });
-    const validation = validatePAIC(builtPAIC);
-    const exported = exportPAIC(builtPAIC);
+
+    const conversation = `
+        My name is Atom.
+        I study IT and programming.
+        I am building PAIC as a startup.
+        I prefer detailed technical explanations.
+        I want to create a portable AI identity standard.
+    `;
+    
+    const extraction = extractMemories({text: conversation});
+
+    const updatedPAIC = addExtractedMemories(paic, extraction.memories);
+
+    const validation = validatePAIC(updatedPAIC);
     return (
         <main>
-            <h1>PAIC Builder Test</h1>
+            <h1>PAIC Memory Integration Test</h1>
+            <h2>Extracted Memories</h2>
+
+            <pre>
+                {JSON.stringify(extraction.memories, null, 2)}
+            </pre>
+
+            <h2>Updated PAIC</h2>
+            <pre>
+                {JSON.stringify(updatedPAIC, null, 2)}
+            </pre>
 
             <h2>Validation Result</h2>
-            <pre>{JSON.stringify(validation, null, 2)}</pre>
-
-            <h2>Built PAIC</h2>
-            <pre>{JSON.stringify(builtPAIC, null, 2)}</pre>
-
-            <h2>Exported PAIC</h2>
-            <pre>{exported}</pre>
+            <pre>
+                {JSON.stringify(validation, null, 2)}
+            </pre>
         </main>
     );
 }

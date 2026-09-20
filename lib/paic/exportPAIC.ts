@@ -1,7 +1,7 @@
 // lib/paic/exportPAIC.ts
 
 import type { PAICDocument } from "@/types/paic";
-import { validatePAIC } from "./validatePaic";
+import { validatePAIC } from "./validatePAIC";
 
 export function exportPAIC(document : PAICDocument) : string {
     const validation = validatePAIC(document);

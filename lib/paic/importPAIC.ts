@@ -1,4 +1,4 @@
-import { validatePAIC } from "@/lib/paic/validatePaic";
+import { validatePAIC } from "@/lib/paic/validatePAIC";
 import { PAICDocument } from "@/types/paic";
 
 export function importPAIC(json : string) : PAICDocument {
