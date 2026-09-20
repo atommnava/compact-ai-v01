@@ -1,43 +1,54 @@
-import type { PAICMemory, MemoryImportance } from "@/types/paic";
+// lib/paic/extractMemories.ts
+
+import type { PAICMemory } from "@/types/paic";
+import type { MemoryCandidate } from "@/lib/paic/memoryCandidate";
 
 export interface ExtractedMemoryInput {
   text: string;
 }
 
 export interface ExtractedMemoryResult {
-  memories: PAICMemory[];
+  candidates: MemoryCandidate[];
 }
 
-export function extractMemories(input: ExtractedMemoryInput): ExtractedMemoryResult {
-  const now = new Date().toISOString();
+export function extractMemories(
+  input: ExtractedMemoryInput
+): ExtractedMemoryResult {
   const text = input.text.trim();
 
-  const memories: PAICMemory[] = [];
+  const candidates: MemoryCandidate[] = [];
 
   if (!text) {
-    return { memories };
+    return { candidates };
   }
 
-  const sentences = text.split(/[.!?]\s+/).map((sentence) => sentence.trim()).filter(Boolean);
+  const sentences = text
+    .split(/[.!?]\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
 
   sentences.forEach((sentence, index) => {
     const category = detectCategory(sentence);
-    const importance = detectImportance(sentence);
+    const confidence = detectConfidence(sentence);
+    const shouldPersist = confidence >= 0.70;
 
-    memories.push({
-      id: `extracted-memory-${index + 1}`,
+    candidates.push({
+      id: `candidate-${index + 1}`,
+      sourceMessageId: `unknown-message-${index + 1}`,
       content: sentence,
       category,
-      importance,
-      tags: generateTags(sentence),
-      createdAt: now,
-      updatedAt: now
+      confidence,
+      reason: generateReason(sentence, category),
+      shouldPersist,
     });
   });
-  return { memories };
+
+  return { candidates };
 }
 
-function detectCategory(sentence: string): PAICMemory["category"] {
+function detectCategory(
+  sentence: string
+): PAICMemory["category"] {
   const lower = sentence.toLowerCase();
 
   if (
@@ -48,6 +59,7 @@ function detectCategory(sentence: string): PAICMemory["category"] {
   ) {
     return "project";
   }
+
   if (
     lower.includes("my name is") ||
     lower.includes("i am") ||
@@ -82,42 +94,74 @@ function detectCategory(sentence: string): PAICMemory["category"] {
   ) {
     return "goal";
   }
+
   return "other";
 }
 
-function detectImportance(sentence: string): MemoryImportance {
+function detectConfidence(sentence: string): number {
   const lower = sentence.toLowerCase();
 
   if (
-    lower.includes("important") ||
-    lower.includes("critical") ||
-    lower.includes("main goal") ||
-    lower.includes("startup")
+    lower.includes("my name is") ||
+    lower.includes("i am") ||
+    lower.includes("i'm")
   ) {
-    return "critical";
+    return 0.95;
   }
 
   if (
-    lower.includes("project") ||
     lower.includes("building") ||
-    lower.includes("goal")
+    lower.includes("project") ||
+    lower.includes("startup")
   ) {
-    return "high";
+    return 0.90;
   }
-  return "medium";
+
+  if (
+    lower.includes("prefer") ||
+    lower.includes("want to") ||
+    lower.includes("plan to")
+  ) {
+    return 0.85;
+  }
+
+  return 0.60;
 }
 
-function generateTags(sentence: string): string[] {
-  const lower = sentence.toLocaleLowerCase();
-  const tags: string[] = [];
+function generateReason(
+  sentence: string,
+  category: PAICMemory["category"]
+): string {
+  const lower = sentence.toLowerCase();
 
-   if (/\bai\b/.test(lower)) tags.push("AI");
-  if (/\bpaic\b/.test(lower)) tags.push("PAIC");
-  if (/\bstartup\b/.test(lower)) tags.push("startup");
-  if (/\btypescript\b/.test(lower)) tags.push("TypeScript");
-  if (/\breact\b/.test(lower)) tags.push("React");
-  if (/\bnext\.js\b/.test(lower)) tags.push("Next.js");
-  if (/\bdrones\b/.test(lower)) tags.push("drones");
+  if (
+    lower.includes("my name is") ||
+    lower.includes("i am") ||
+    lower.includes("i'm")
+  ) {
+    return "Explicit statement made by the user.";
+  }
 
-  return tags;
+  if (
+    lower.includes("building") ||
+    lower.includes("project") ||
+    lower.includes("startup")
+  ) {
+    return "User explicitly describes an ongoing project.";
+  }
+
+  if (
+    lower.includes("prefer")
+  ) {
+    return "User explicitly describes a preference.";
+  }
+
+  if (
+    lower.includes("want to") ||
+    lower.includes("plan to")
+  ) {
+    return "User explicitly describes a goal or intention.";
+  }
+
+  return `Potential ${category} memory detected from the text.`;
 }

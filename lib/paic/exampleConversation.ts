@@ -1,6 +1,6 @@
 import type { Conversation } from './conversation';
 
-export const examppleConversation: Conversation = {
+export const exampleConversation: Conversation = {
     id: 'conversation-1',
     title: 'Example Conversation',
     provider: 'Example Provider',
