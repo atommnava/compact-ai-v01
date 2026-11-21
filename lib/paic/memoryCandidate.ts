@@ -2,6 +2,7 @@ import type { PAICMemory } from "@/types/paic";
 
 export type MemoryCandidateStatus = 
     | "pending"
+    | "review"
     | "approved"
     | "rejected";
 
@@ -13,4 +14,5 @@ export interface MemoryCandidate {
     confidence: number;
     reason: string;
     shouldPersist: boolean;
+    status: MemoryCandidateStatus;
 }
