@@ -2,6 +2,7 @@
 
 import type { PAICMemory } from "@/types/paic";
 import type { MemoryCandidate } from "@/lib/paic/memoryCandidate";
+import type { Conversation } from "@/lib/paic/conversation";
 
 export interface ExtractedMemoryInput {
   text: string;
@@ -11,40 +12,71 @@ export interface ExtractedMemoryResult {
   candidates: MemoryCandidate[];
 }
 
+// Extrae candidatos de texto plano. No conoce roles ni mensajes reales,
+// por eso el sourceMessageId es provisional ("unknown-message-N").
 export function extractMemories(
   input: ExtractedMemoryInput
 ): ExtractedMemoryResult {
-  const text = input.text.trim();
+  const candidates = splitSentences(input.text).map((sentence, index) =>
+    buildCandidate(
+      sentence,
+      `candidate-${index + 1}`,
+      `unknown-message-${index + 1}`
+    )
+  );
 
+  return { candidates };
+}
+
+// Extrae candidatos de una conversación con roles.
+// Solo los mensajes del usuario generan memoria personal (documento maestro §12.4):
+// el texto del asistente o del sistema no es un hecho sobre el usuario.
+export function extractMemoriesFromConversation(
+  conversation: Conversation
+): ExtractedMemoryResult {
   const candidates: MemoryCandidate[] = [];
 
-  if (!text) {
-    return { candidates };
+  for (const message of conversation.messages) {
+    if (message.role !== "user") {
+      continue;
+    }
+
+    for (const sentence of splitSentences(message.content)) {
+      candidates.push(
+        buildCandidate(sentence, `candidate-${candidates.length + 1}`, message.id)
+      );
+    }
   }
 
-  const sentences = text
+  return { candidates };
+}
+
+function splitSentences(text: string): string[] {
+  return text
+    .trim()
     .split(/[.!?]\s+/)
     .map((sentence) => sentence.trim())
     .filter(Boolean);
+}
 
-  sentences.forEach((sentence, index) => {
-    const category = detectCategory(sentence);
-    const confidence = detectConfidence(sentence);
-    const shouldPersist = confidence >= 0.70;
+function buildCandidate(
+  sentence: string,
+  id: string,
+  sourceMessageId: string
+): MemoryCandidate {
+  const category = detectCategory(sentence);
+  const confidence = detectConfidence(sentence);
 
-    candidates.push({
-      id: `candidate-${index + 1}`,
-      sourceMessageId: `unknown-message-${index + 1}`,
-      content: sentence,
-      category,
-      confidence,
-      reason: generateReason(sentence, category),
-      shouldPersist,
-      status: "pending",
-    });
-  });
-
-  return { candidates };
+  return {
+    id,
+    sourceMessageId,
+    content: sentence,
+    category,
+    confidence,
+    reason: generateReason(sentence, category),
+    shouldPersist: confidence >= 0.70,
+    status: "pending",
+  };
 }
 
 function detectCategory(
