@@ -40,6 +40,7 @@ export function extractMemories(
       confidence,
       reason: generateReason(sentence, category),
       shouldPersist,
+      status: "pending",
     });
   });
 
