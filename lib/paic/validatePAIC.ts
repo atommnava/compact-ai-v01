@@ -1,4 +1,4 @@
-// lib/paic/validatePaic.ts
+// lib/paic/validatePAIC.ts
 import type { PAICDocument } from "@/types/paic"
 
 export interface PAICValidationResult {
