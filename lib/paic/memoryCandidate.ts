@@ -5,7 +5,7 @@ import type { PAICMemory } from "@/types/paic";
 // - review:   evaluado, pero necesita una decisión humana.
 // - approved: aceptado; podrá guardarse como memoria.
 // - rejected: descartado; no se guardará.
-export type MemoryCandidateStatus = 
+export type MemoryCandidateStatus =
     | "pending"
     | "review"
     | "approved"
@@ -24,4 +24,7 @@ export interface MemoryCandidate {
     reason: string;
     shouldPersist: boolean;
     status: MemoryCandidateStatus;
+    // Por qué evaluateMemoryCandidates le asignó su status.
+    // Vacío mientras el candidato sigue en "pending".
+    evaluationReason?: string;
 }
