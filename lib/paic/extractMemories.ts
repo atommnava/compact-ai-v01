@@ -12,17 +12,24 @@ export interface ExtractedMemoryResult {
   candidates: MemoryCandidate[];
 }
 
+// Valor provisional cuando el texto no viene de una conversación real.
+export const UNKNOWN_CONVERSATION_ID = "unknown-conversation";
+
+interface CandidateSource {
+  conversationId: string;
+  messageId: string;
+}
+
 // Extrae candidatos de texto plano. No conoce roles ni mensajes reales,
-// por eso el sourceMessageId es provisional ("unknown-message-N").
+// por eso la procedencia es provisional.
 export function extractMemories(
   input: ExtractedMemoryInput
 ): ExtractedMemoryResult {
   const candidates = splitSentences(input.text).map((sentence, index) =>
-    buildCandidate(
-      sentence,
-      `candidate-${index + 1}`,
-      `unknown-message-${index + 1}`
-    )
+    buildCandidate(sentence, `candidate-${index + 1}`, {
+      conversationId: UNKNOWN_CONVERSATION_ID,
+      messageId: `unknown-message-${index + 1}`,
+    })
   );
 
   return { candidates };
@@ -43,7 +50,10 @@ export function extractMemoriesFromConversation(
 
     for (const sentence of splitSentences(message.content)) {
       candidates.push(
-        buildCandidate(sentence, `candidate-${candidates.length + 1}`, message.id)
+        buildCandidate(sentence, `candidate-${candidates.length + 1}`, {
+          conversationId: conversation.id,
+          messageId: message.id,
+        })
       );
     }
   }
@@ -62,14 +72,15 @@ function splitSentences(text: string): string[] {
 function buildCandidate(
   sentence: string,
   id: string,
-  sourceMessageId: string
+  source: CandidateSource
 ): MemoryCandidate {
   const category = detectCategory(sentence);
   const confidence = detectConfidence(sentence);
 
   return {
     id,
-    sourceMessageId,
+    sourceConversationId: source.conversationId,
+    sourceMessageId: source.messageId,
     content: sentence,
     category,
     confidence,

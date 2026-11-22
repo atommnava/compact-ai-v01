@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   extractMemories,
   extractMemoriesFromConversation,
+  UNKNOWN_CONVERSATION_ID,
 } from "@/lib/paic/extractMemories";
 import type { Conversation } from "@/lib/paic/conversation";
 
@@ -48,6 +49,13 @@ describe("extractMemories: comportamiento actual", () => {
     ]);
   });
 
+  it("marca la conversación como desconocida en texto plano", () => {
+    const { candidates } = extractMemories({ text: "My name is Atom. I prefer short answers." });
+
+    expect(candidates).toHaveLength(2);
+    expect(candidates.every((c) => c.sourceConversationId === UNKNOWN_CONVERSATION_ID)).toBe(true);
+  });
+
   it("crea todos los candidatos con status \"pending\"", () => {
     const { candidates } = extractMemories({ text: "My name is Atom. I prefer short answers." });
 
@@ -90,6 +98,13 @@ describe("extractMemoriesFromConversation", () => {
     const { candidates } = extractMemoriesFromConversation(conversation);
 
     expect(candidates.map((c) => c.sourceMessageId)).toEqual(["m2", "m2", "m4"]);
+  });
+
+  it("enlaza cada candidato con el id de su conversación", () => {
+    const { candidates } = extractMemoriesFromConversation(conversation);
+
+    expect(candidates).toHaveLength(3);
+    expect(candidates.every((c) => c.sourceConversationId === "conversation-test")).toBe(true);
   });
 
   it("numera los candidatos de forma continua en toda la conversación", () => {
