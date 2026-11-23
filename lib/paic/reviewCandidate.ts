@@ -12,7 +12,7 @@ import type { MemoryCandidate } from "@/lib/paic/memoryCandidate";
 const DEFAULT_APPROVE_REASON = "Approved by the user.";
 const DEFAULT_REJECT_REASON = "Rejected by the user.";
 
-export function approveMemory(
+export function approveCandidate(
     candidate: MemoryCandidate,
     reason?: string
 ): MemoryCandidate {
