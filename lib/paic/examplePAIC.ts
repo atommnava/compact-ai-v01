@@ -3,7 +3,7 @@
 import type { PAICDocument } from "@/types/paic";
 
 export const examplePAIC: PAICDocument = {
-  version: "0.1",
+  version: "0.2",
 
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -122,6 +122,12 @@ export const examplePAIC: PAICDocument = {
 
       importance: "critical",
 
+      status: "active",
+
+      source: {
+        provider: "chatgpt"
+      },
+
       tags: [
         "PAIC",
         "AI",
@@ -141,6 +147,12 @@ export const examplePAIC: PAICDocument = {
       category: "preference",
 
       importance: "high",
+
+      status: "active",
+
+      source: {
+        provider: "chatgpt"
+      },
 
       tags: [
         "communication",

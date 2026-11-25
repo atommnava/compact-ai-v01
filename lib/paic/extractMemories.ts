@@ -1,7 +1,6 @@
 // lib/paic/extractMemories.ts
 
-import type { PAICMemory } from "@/types/paic";
-import type { MemoryCandidate } from "@/lib/paic/memoryCandidate";
+import type { CandidateCategory, MemoryCandidate } from "@/lib/paic/memoryCandidate";
 import type { Conversation } from "@/lib/paic/conversation";
 
 export interface ExtractedMemoryInput {
@@ -92,7 +91,7 @@ function buildCandidate(
 
 function detectCategory(
   sentence: string
-): PAICMemory["category"] {
+): CandidateCategory {
   const lower = sentence.toLowerCase();
 
   if (
@@ -174,7 +173,7 @@ function detectConfidence(sentence: string): number {
 
 function generateReason(
   sentence: string,
-  category: PAICMemory["category"]
+  category: CandidateCategory
 ): string {
   const lower = sentence.toLowerCase();
 

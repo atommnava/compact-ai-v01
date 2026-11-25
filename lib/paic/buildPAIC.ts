@@ -27,11 +27,14 @@ export function buildPAIC(input : BuildPAICInput) : PAICDocument {
     };
 
     if (input.interests && input.interests.length > 0) {
-        paic.memories = input.interests.map((interest, index) => ({
-            id : `memory-interest-${index + 1}`,
+        paic.memories = input.interests.map((interest) => ({
+            id : crypto.randomUUID(),
             content : `User is interested in ${interest}.`,
-            category : "personal",
+            // Un interés es un gusto declarado: en PAM, "preference" (taste or stated desire).
+            category : "preference",
             importance : "medium",
+            status : "active",
+            source : { provider : "manual", extractionMethod : "manual" },
             tags : ["interest", interest],
             createdAt : now,
             updatedAt : now,

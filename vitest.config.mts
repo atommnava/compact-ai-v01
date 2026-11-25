@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
@@ -10,5 +10,8 @@ export default defineConfig({
     test: {
         environment: 'node',
         include: ["**/*.test.ts"],
+        // .claude/** contiene worktrees de otras sesiones con copias antiguas
+        // del código; no deben ejecutarse como tests de este proyecto.
+        exclude: [...configDefaults.exclude, ".claude/**"],
     },
 });

@@ -1,5 +1,11 @@
 // types/paic.ts
-export type PAICVersion = "0.1";
+
+// Versión actual del contrato. Los documentos "0.1" se migran al importarlos
+// (ver lib/paic/migratePAIC.ts).
+export type PAICVersion = "0.2";
+export type LegacyPAICVersion = "0.1";
+
+// Utilidad de recordar algo. No es lo mismo que confidence (calidad de la evidencia).
 export type MemoryImportance = "low" | "medium" | "high" | "critical";
 export type ProjectStatus =
     | "idea"
@@ -75,31 +81,86 @@ export interface PAICGoal {
     relatedProjects? : string[];
 }
 
+// --- Memorias, alineadas con PAM v1.0 (https://portable-ai-memory.org/spec/v1.0/) ---
+
+// Mismos valores que el "type" de PAM (§5). "custom" exige customCategory.
+export type MemoryCategory =
+    | "fact"
+    | "preference"
+    | "skill"
+    | "context"
+    | "relationship"
+    | "goal"
+    | "instruction"
+    | "identity"
+    | "environment"
+    | "project"
+    | "custom";
+
+// Ciclo de vida de una memoria ya guardada (PAM §7). Una memoria "retracted"
+// nunca se borra físicamente: se conserva para auditoría y para poder deshacer.
+export type MemoryStatus =
+    | "active"
+    | "superseded"
+    | "deprecated"
+    | "retracted"
+    | "archived";
+
+// Cómo se obtuvo la memoria (PAM §11.3, lista cerrada).
+export type ExtractionMethod =
+    | "llm_inference"
+    | "explicit_user_input"
+    | "api_export"
+    | "browser_extraction"
+    | "manual";
+
+// Plataformas recomendadas por PAM (§11.4) más las propias de PAIC.
+// "unknown" = origen desconocido (p. ej. memorias migradas desde la versión 0.1).
+export type PAICProvider =
+    | "chatgpt"
+    | "claude"
+    | "gemini"
+    | "grok"
+    | "perplexity"
+    | "copilot"
+    | "deepseek"
+    | "local"
+    | "manual"
+    | "other"
+    | "unknown";
+
 export interface PAICMemory {
     id : string;
     content : string;
-    category :
-        | "identity"
-        | "preference"
-        | "project"
-        | "skill"
-        | "goal"
-        | "relationship"
-        | "technical"
-        | "personal"
-        | "other";
-    
+    category : MemoryCategory;
+    // Obligatorio cuando category === "custom" (p. ej. "other").
+    customCategory? : string;
+
     importance : MemoryImportance;
-    source? : PAICMemorySource;
+    // Calidad de la evidencia, de 0 a 1. Ausente si la escribió la persona a mano.
+    confidence? : number;
+    status : MemoryStatus;
+    source : PAICMemorySource;
     tags? : string[];
+
     createdAt : string;
     updatedAt : string;
+    // Hasta cuándo es válida (para memorias que caducan).
+    validUntil? : string;
+    // Id de la memoria que la reemplaza (cuando status === "superseded").
+    supersededBy? : string;
 }
 
+// Procedencia de la memoria (equivale a "provenance" en PAM §11).
 export interface PAICMemorySource {
-    provider? : "chatgpt" | "claude" | "gemini" | "deepseek" | "copilot" | "other";
+    provider : PAICProvider;
     conversationId? : string;
     messageId? : string;
+    extractionMethod? : ExtractionMethod;
+    extractedAt? : string;
+    // Sistema que la extrajo, formato "nombre/semver" (p. ej. "paic-rules/0.1.0").
+    extractor? : string;
+    // Cuándo llegó a PAIC. No existe en PAM: al exportar viajará en metadata.
     importedAt? : string;
 }
 

@@ -1,6 +1,8 @@
 import { validatePAIC } from "@/lib/paic/validatePAIC";
-import { PAICDocument } from "@/types/paic";
+import { isLegacyPAIC, migratePAIC } from "@/lib/paic/migratePAIC";
+import type { PAICDocument } from "@/types/paic";
 
+// Lee un documento PAIC en JSON. Los documentos 0.1 se migran a 0.2 antes de validar.
 export function importPAIC(json : string) : PAICDocument {
     let parsed : unknown;
 
@@ -10,12 +12,13 @@ export function importPAIC(json : string) : PAICDocument {
         throw new Error("Invalid JSON format...");
     }
 
-    const validation = validatePAIC(parsed);
+    const document = isLegacyPAIC(parsed) ? migratePAIC(parsed) : parsed;
+    const validation = validatePAIC(document);
 
     if (!validation.isValid) {
         throw new Error(
             `Invalid PAIC document: ${validation.errors.join(", ")}`
         );
     }
-    return parsed as PAICDocument;
+    return document as PAICDocument;
 }

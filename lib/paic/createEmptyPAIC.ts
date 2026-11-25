@@ -10,7 +10,7 @@ export function createEmptyPAIC(): PAICDocument {
   const now = new Date().toISOString();
 
   return {
-    version : "0.1",
+    version : "0.2",
     createdAt : now,
     updatedAt : now,
 

@@ -1,4 +1,9 @@
-import type { PAICMemory } from "@/types/paic";
+import type { MemoryCategory } from "@/types/paic";
+
+// Categoría de un candidato: las de PAICMemory más "other", el cajón de lo que
+// el extractor no supo clasificar. Al convertirse en memoria, "other" pasa a
+// category "custom" con customCategory "other" (PAM no tiene un tipo "other").
+export type CandidateCategory = MemoryCategory | "other";
 
 // Ciclo de vida de un candidato antes de convertirse en PAICMemory:
 // - pending:  recién extraído, nadie lo ha evaluado todavía.
@@ -19,7 +24,7 @@ export interface MemoryCandidate {
     sourceConversationId: string;
     sourceMessageId: string;
     content: string;
-    category: PAICMemory["category"];
+    category: CandidateCategory;
     confidence: number;
     reason: string;
     shouldPersist: boolean;

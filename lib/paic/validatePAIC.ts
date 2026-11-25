@@ -17,7 +17,8 @@ export function validatePAIC(document : unknown) : PAICValidationResult {
     }
     const paic = document as Partial<PAICDocument>;
 
-    if (paic.version !== "0.1") {
+    // Los documentos "0.1" se migran antes de validar (ver importPAIC).
+    if (paic.version !== "0.2") {
         errors.push("Invalid or missing PAIC version.");
     }
     if (!paic.createdAt) {
@@ -27,7 +28,7 @@ export function validatePAIC(document : unknown) : PAICValidationResult {
         errors.push("Missing updatedAt");
     }
     if (!paic.identity) {
-        errors.push("Missing preferences.");
+        errors.push("Missing identity.");
     }
     if (!Array.isArray(paic.skills)) {
         errors.push("Skills must be an array");
