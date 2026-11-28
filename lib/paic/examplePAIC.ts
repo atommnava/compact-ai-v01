@@ -177,5 +177,3 @@ export const examplePAIC: PAICDocument = {
       "Example document used for development and testing."
   }
 };
-
-console.log(examplePAIC);
