@@ -8,8 +8,8 @@ describe("normalizeContent (PAM §6.1)", () => {
   });
 
   it("trata igual una letra acentuada escrita de dos formas Unicode", () => {
-    const precomposed = "café"; // "é" como un solo carácter
-    const decomposed = "café"; // "e" + acento combinado
+    const precomposed = "caf\u00e9"; // "é" como un solo carácter
+    const decomposed = "cafe\u0301"; // "e" + acento combinado
 
     expect(precomposed).not.toBe(decomposed);
     expect(normalizeContent(precomposed)).toBe(normalizeContent(decomposed));

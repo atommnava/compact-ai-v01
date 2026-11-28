@@ -20,6 +20,8 @@ import type { PAICDocument } from "@/types/paic";
 
 const NOW = "2026-11-27T12:00:00.000Z";
 const OPTIONS = { ownerId: "atom", now: NOW, exportId: "e47ac10b-58cc-4372-a567-0e02b2c3d479" };
+// Para los tests que miran solo cómo se traducen las memorias del documento.
+const MEMORY_ONLY = { ...OPTIONS, includeProfile: false };
 
 // Documento con memorias que vienen de una conversación real, pasando por todo el flujo.
 function documentFromConversation(): PAICDocument {
@@ -78,7 +80,7 @@ describe("exportToPAM", () => {
   });
 
   it("rellena la raíz del archivo PAM", async () => {
-    const pam = await exportToPAM(createEmptyPAIC(), OPTIONS);
+    const pam = await exportToPAM(createEmptyPAIC(), MEMORY_ONLY);
 
     expect(pam).toMatchObject({
       schema: "portable-ai-memory",
@@ -95,7 +97,7 @@ describe("exportToPAM", () => {
 
   it("traduce una memoria extraída con toda su procedencia", async () => {
     const document = documentFromConversation();
-    const pam = await exportToPAM(document, OPTIONS);
+    const pam = await exportToPAM(document, MEMORY_ONLY);
     const original = document.memories[0];
 
     expect(pam.memories[0]).toEqual({
@@ -133,7 +135,7 @@ describe("exportToPAM", () => {
 
   it("no crea índice de conversaciones si ninguna memoria viene de una", async () => {
     const document = addMemory(createEmptyPAIC(), { content: "Call me Atom.", category: "instruction" });
-    const pam = await exportToPAM(document, OPTIONS);
+    const pam = await exportToPAM(document, MEMORY_ONLY);
 
     expect(pam).not.toHaveProperty("conversations_index");
     expect(pam.memories[0].provenance).toEqual({ platform: "manual", extraction_method: "manual" });
@@ -146,7 +148,7 @@ describe("exportToPAM", () => {
       customCategory: "certification",
       tags: ["Aviation", "aviation", "Next.js", "  "],
     });
-    const pam = await exportToPAM(document, OPTIONS);
+    const pam = await exportToPAM(document, MEMORY_ONLY);
 
     expect(pam.memories[0]).toMatchObject({
       type: "custom",
@@ -164,7 +166,7 @@ describe("exportToPAM", () => {
       memories: base.memories.map((m) => ({ ...m, status: "retracted" })),
     };
 
-    const pam = await exportToPAM(document, OPTIONS);
+    const pam = await exportToPAM(document, MEMORY_ONLY);
 
     expect(pam.memories[0].status).toBe("retracted");
   });
@@ -179,6 +181,28 @@ describe("exportToPAM", () => {
 
   it("exige un ownerId: no lo inventa", async () => {
     await expect(exportToPAM(createEmptyPAIC(), { now: NOW })).rejects.toThrow("ownerId is required");
+  });
+
+  it("incluye el perfil convertido en memorias, marcado con su campo de origen", async () => {
+    const pam = await exportToPAM(examplePAIC, OPTIONS);
+    const tone = pam.memories.find((m) => m.id === "paic-profile:preferences.tone");
+
+    expect(tone).toMatchObject({
+      type: "instruction",
+      content: "Prefers a technical tone.",
+      tags: ["profile", "preferences"],
+      provenance: { platform: "manual", extraction_method: "manual" },
+      metadata: { paic: { importance: "medium", profile_field: "preferences.tone" } },
+    });
+    // Perfil primero, después las memorias del documento.
+    expect(pam.memories.at(-1)?.id).toBe("memory-2");
+    expect(validatePAM(pam).errors).toEqual([]);
+  });
+
+  it("deja fuera el perfil con includeProfile: false", async () => {
+    const pam = await exportToPAM(examplePAIC, MEMORY_ONLY);
+
+    expect(pam.memories.map((m) => m.id)).toEqual(["memory-1", "memory-2"]);
   });
 
   it("exporta examplePAIC y un documento migrado desde 0.1 como PAM válido", async () => {

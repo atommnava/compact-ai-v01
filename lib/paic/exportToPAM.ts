@@ -2,6 +2,7 @@
 
 import type { PAICDocument, PAICMemory } from "@/types/paic";
 import { normalizeContent } from "@/lib/paic/normalizeContent";
+import { profileToMemories } from "@/lib/paic/profileToMemories";
 
 // Adaptador PAIC → PAM v1.0 (https://portable-ai-memory.org/spec/v1.0/).
 //
@@ -72,6 +73,9 @@ export interface ExportToPAMOptions {
   // Momento del export y su id. Se pueden fijar para que los tests sean deterministas.
   now?: string;
   exportId?: string;
+  // Incluir el perfil (identity, preferences, skills, projects, goals) convertido
+  // en memorias. Por defecto sí: PAM solo tiene memorias y, sin esto, se perdería.
+  includeProfile?: boolean;
 }
 
 export async function exportToPAM(
@@ -84,7 +88,11 @@ export async function exportToPAM(
     throw new Error("ownerId is required to export to PAM.");
   }
 
-  const memories = await Promise.all(document.memories.map(toPAMMemory));
+  const profile = options.includeProfile === false ? [] : profileToMemories(document);
+  const memories = await Promise.all([
+    ...profile.map(({ memory, field }) => toPAMMemory(memory, field)),
+    ...document.memories.map((memory) => toPAMMemory(memory)),
+  ]);
   const conversationsIndex = buildConversationsIndex(memories);
 
   return {
@@ -116,13 +124,14 @@ export function toPAMTag(tag: string): string {
     .trim()
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "") // quita acentos
+    .replace(/[\u0300-\u036f]/g, "") // quita acentos
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9_-]/g, "")
     .replace(/^[-_]+/, "");
 }
 
-async function toPAMMemory(memory: PAICMemory): Promise<PAMMemory> {
+// profileField: campo del perfil del que sale la memoria (ver profileToMemories).
+async function toPAMMemory(memory: PAICMemory, profileField?: string): Promise<PAMMemory> {
   if (memory.category === "custom" && !memory.customCategory) {
     throw new Error(`Memory ${memory.id} has category "custom" but no customCategory.`);
   }
@@ -161,6 +170,8 @@ async function toPAMMemory(memory: PAICMemory): Promise<PAMMemory> {
       paic: {
         importance: memory.importance,
         ...(source.importedAt && { imported_at: source.importedAt }),
+        // Permite reconstruir el perfil al reimportar en PAIC.
+        ...(profileField && { profile_field: profileField }),
       },
     },
   };
