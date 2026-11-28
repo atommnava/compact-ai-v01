@@ -1,7 +1,8 @@
 // lib/paic/pamSchemaValidator.ts
 //
 // Valida un objeto contra el JSON Schema oficial de PAM v1.0 (copia en vendor/pam/).
-// Se usa en los tests; ajv y ajv-formats son dependencias de desarrollo.
+// Se usa en los tests y en importFromPAM: un archivo PAM que llega de fuera no es
+// de confianza, así que se valida antes de leerlo.
 
 import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";

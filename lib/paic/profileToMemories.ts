@@ -23,6 +23,10 @@ export const PROFILE_MEMORY_PREFIX = "paic-profile:";
 export interface ProfileMemory {
   // Campo del perfil del que sale, p. ej. "identity.name" o "skills.skill-1".
   field: string;
+  // Valor original del campo (texto, lista, booleano u objeto completo).
+  // Se exporta en metadata.paic.profile_value para reconstruir el perfil sin
+  // tener que interpretar el texto de la memoria.
+  value: unknown;
   memory: PAICMemory;
 }
 
@@ -34,13 +38,17 @@ export function profileToMemories(document: PAICDocument): ProfileMemory[] {
     category: MemoryCategory,
     // false/undefined/"" = campo vacío → no se crea memoria.
     content: string | false | undefined,
-    dates?: { createdAt?: string; updatedAt?: string }
+    // Para skills/projects/goals: el objeto completo. Si no se indica, se lee
+    // del documento siguiendo el campo ("preferences.tone" → document.preferences.tone).
+    options: { value?: unknown; dates?: { createdAt?: string; updatedAt?: string } } = {}
   ) => {
     if (!content) {
       return;
     }
+    const { dates } = options;
     result.push({
       field,
+      value: "value" in options ? options.value : valueAt(document, field),
       memory: {
         id: `${PROFILE_MEMORY_PREFIX}${field}`,
         content,
@@ -84,7 +92,8 @@ export function profileToMemories(document: PAICDocument): ProfileMemory[] {
     add(
       `skills.${skill.id}`,
       "skill",
-      sentences(`Skill: ${skill.name}${details ? ` (${details})` : ""}.`, evidence && `Evidence: ${evidence}.`)
+      sentences(`Skill: ${skill.name}${details ? ` (${details})` : ""}.`, evidence && `Evidence: ${evidence}.`),
+      { value: skill }
     );
   }
 
@@ -100,7 +109,7 @@ export function profileToMemories(document: PAICDocument): ProfileMemory[] {
         project.goals?.length ? `Goals: ${project.goals.join("; ")}.` : undefined,
         project.notes?.length ? `Notes: ${project.notes.join("; ")}.` : undefined
       ),
-      { createdAt: project.createdAt, updatedAt: project.updatedAt }
+      { value: project, dates: { createdAt: project.createdAt, updatedAt: project.updatedAt } }
     );
   }
 
@@ -114,7 +123,8 @@ export function profileToMemories(document: PAICDocument): ProfileMemory[] {
         filled(goal.description) && endWithPeriod(goal.description),
         goal.timeframe && `Timeframe: ${goal.timeframe.replace("_", " ")}.`,
         goal.status && `Status: ${goal.status.replace("_", " ")}.`
-      )
+      ),
+      { value: goal }
     );
   }
 
@@ -126,6 +136,18 @@ const RESPONSE_STYLE = {
   balanced: "Prefers balanced-length responses.",
   detailed: "Prefers detailed responses.",
 } as const;
+
+// Lee un valor siguiendo un campo con puntos: valueAt(doc, "preferences.formatting.prefersBullets").
+function valueAt(document: PAICDocument, field: string): unknown {
+  let current: unknown = document;
+  for (const key of field.split(".")) {
+    if (!current || typeof current !== "object") {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
 
 // --- utilidades de texto ---
 

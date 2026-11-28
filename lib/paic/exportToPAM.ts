@@ -90,7 +90,7 @@ export async function exportToPAM(
 
   const profile = options.includeProfile === false ? [] : profileToMemories(document);
   const memories = await Promise.all([
-    ...profile.map(({ memory, field }) => toPAMMemory(memory, field)),
+    ...profile.map(({ memory, field, value }) => toPAMMemory(memory, { field, value })),
     ...document.memories.map((memory) => toPAMMemory(memory)),
   ]);
   const conversationsIndex = buildConversationsIndex(memories);
@@ -130,14 +130,21 @@ export function toPAMTag(tag: string): string {
     .replace(/^[-_]+/, "");
 }
 
-// profileField: campo del perfil del que sale la memoria (ver profileToMemories).
-async function toPAMMemory(memory: PAICMemory, profileField?: string): Promise<PAMMemory> {
+// profile: campo del perfil del que sale la memoria y su valor original (ver profileToMemories).
+async function toPAMMemory(
+  memory: PAICMemory,
+  profile?: { field: string; value: unknown }
+): Promise<PAMMemory> {
   if (memory.category === "custom" && !memory.customCategory) {
     throw new Error(`Memory ${memory.id} has category "custom" but no customCategory.`);
   }
 
   // Sin duplicados ni vacías (PAM exige uniqueItems).
-  const tags = [...new Set((memory.tags ?? []).map(toPAMTag).filter(Boolean))];
+  const originalTags = memory.tags ?? [];
+  const tags = [...new Set(originalTags.map(toPAMTag).filter(Boolean))];
+  // Si convertirlas cambió algo ("Startup" → "startup"), se guardan las originales
+  // en metadata para que la ida y vuelta PAIC → PAM → PAIC no pierda nada.
+  const tagsChanged = originalTags.length !== tags.length || originalTags.some((tag, i) => tag !== tags[i]);
   const { source } = memory;
 
   return {
@@ -170,8 +177,9 @@ async function toPAMMemory(memory: PAICMemory, profileField?: string): Promise<P
       paic: {
         importance: memory.importance,
         ...(source.importedAt && { imported_at: source.importedAt }),
-        // Permite reconstruir el perfil al reimportar en PAIC.
-        ...(profileField && { profile_field: profileField }),
+        ...(tagsChanged && { tags: originalTags }),
+        // Permite reconstruir el perfil al reimportar en PAIC (ver importFromPAM).
+        ...(profile && { profile_field: profile.field, profile_value: profile.value }),
       },
     },
   };
