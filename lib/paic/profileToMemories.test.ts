@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import { profileToMemories, PROFILE_MEMORY_PREFIX } from "@/lib/paic/profileToMemories";
 import { examplePAIC } from "@/lib/paic/examplePAIC";
 import { createEmptyPAIC } from "@/lib/paic/createEmptyPAIC";
+import { buildPAIC } from "@/lib/paic/buildPAIC";
 import type { PAICDocument } from "@/types/paic";
 
 // Devuelve { campo: { category, content } } para comparar fácilmente.
@@ -90,19 +91,23 @@ describe("profileToMemories", () => {
     expect(memory.updatedAt).toBe("2026-02-01T00:00:00.000Z");
   });
 
-  it("convierte las preferencias por defecto de createEmptyPAIC en 7 instrucciones", () => {
-    // Comportamiento actual, a revisar: createEmptyPAIC rellena preferencias por
-    // defecto, y al exportarlas parecen preferencias que la persona declaró.
-    const fields = profileToMemories(createEmptyPAIC()).map((p) => p.field);
+  it("un documento nuevo no tiene preferencias que la persona no eligió", () => {
+    expect(profileToMemories(createEmptyPAIC())).toEqual([]);
+  });
 
-    expect(fields).toEqual([
-      "preferences.responseStyle",
-      "preferences.tone",
-      "preferences.preferredLanguage",
-      "preferences.explanationDepth",
-      "preferences.formatting.prefersBullets",
-      "preferences.formatting.prefersExamples",
-      "preferences.formatting.prefersStepByStep",
+  it("solo exporta lo que la persona declaró (caso de Lucía)", () => {
+    // Lucía solo habla español, crea su perfil y nunca abre las preferencias.
+    // Antes, el export decía "Prefers responses in English." y lo marcaba como
+    // escrito por ella. Ahora solo aparece lo que declaró.
+    const lucia = buildPAIC({ name: "Lucía", occupation: "Nurse", languages: ["Spanish"] });
+
+    const memories = profileToMemories(lucia);
+
+    expect(memories.map(({ memory }) => memory.content)).toEqual([
+      "The user's name is Lucía.",
+      "The user's occupation is Nurse.",
+      "The user speaks Spanish.",
     ]);
+    expect(memories.some(({ memory }) => memory.category === "instruction")).toBe(false);
   });
 });
